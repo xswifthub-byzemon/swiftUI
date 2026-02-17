@@ -1,73 +1,130 @@
--- [[ Swift Hub UI Library (Mobile Edition) | Created by Pai for Zemon ]] --
+-- [[ Swift Hub UI Library (V2: Tab System) | Created by Pai for Zemon ]] --
 local Library = {}
 
 function Library:CreateWindow(Settings)
     local WindowName = Settings.Name or "Swift Hub"
     
-    -- สร้าง ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "SwiftHubUI"
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Main Frame (ปรับขนาดให้พอดีมือถือ)
+    -- Main Frame (ปรับให้กว้างขึ้นเพื่อใส่แถบ Tab)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-    MainFrame.Size = UDim2.new(0, 300, 0, 200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
+    MainFrame.Size = UDim2.new(0, 400, 0, 250)
     MainFrame.Active = true
-    MainFrame.Draggable = true -- ให้ซีม่อนลากจอมือถือไปมาได้
+    MainFrame.Draggable = true
 
-    -- มุมโค้งมน (UICorner)
     local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
+    Corner.CornerRadius = UDim.new(0, 12)
     Corner.Parent = MainFrame
 
-    -- หัวข้อ (Title)
+    -- Sidebar (แถบเลือก Tab ด้านซ้าย)
+    local SideBar = Instance.new("Frame")
+    SideBar.Name = "SideBar"
+    SideBar.Parent = MainFrame
+    SideBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    SideBar.Size = UDim2.new(0, 100, 1, 0)
+    
+    local SideCorner = Instance.new("UICorner")
+    SideCorner.CornerRadius = UDim.new(0, 12)
+    SideCorner.Parent = SideBar
+
+    -- Title Label
     local Title = Instance.new("TextLabel")
-    Title.Parent = MainFrame
-    Title.Text = WindowName .. " | By Zemon"
-    Title.TextColor3 = Color3.fromRGB(255, 105, 180) -- สีชมพูหวานๆ แบบปาย
-    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.Parent = SideBar
+    Title.Text = "Swift Hub"
+    Title.TextColor3 = Color3.fromRGB(255, 105, 180) -- สีชมพูที่ซีม่อนชอบ
+    Title.Size = UDim2.new(1, 0, 0, 40)
     Title.BackgroundTransparency = 1
     Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 16
+    Title.TextSize = 14
 
-    -- Container สำหรับปุ่มต่างๆ
-    local Container = Instance.new("ScrollingFrame")
-    Container.Parent = MainFrame
-    Container.Position = UDim2.new(0, 10, 0, 35)
-    Container.Size = UDim2.new(1, -20, 1, -45)
-    Container.BackgroundTransparency = 1
-    Container.ScrollBarThickness = 2
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Parent = SideBar
+    TabContainer.Position = UDim2.new(0, 5, 0, 45)
+    TabContainer.Size = UDim2.new(1, -10, 1, -50)
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.ScrollBarThickness = 0
+    
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.Parent = TabContainer
+    TabLayout.Padding = UDim.new(0, 5)
 
-    local Layout = Instance.new("UIListLayout")
-    Layout.Parent = Container
-    Layout.Padding = UDim.new(0, 5)
+    -- Page Container (หน้าเมนูทางขวา)
+    local PageContainer = Instance.new("Frame")
+    PageContainer.Parent = MainFrame
+    PageContainer.Position = UDim2.new(0, 105, 0, 10)
+    PageContainer.Size = UDim2.new(1, -115, 1, -20)
+    PageContainer.BackgroundTransparency = 1
 
-    -- ฟังชั่นเพิ่มปุ่ม (Button)
-    local Elements = {}
-    function Elements:CreateButton(Text, Callback)
-        local Btn = Instance.new("TextButton")
-        Btn.Parent = Container
-        Btn.Size = UDim2.new(1, 0, 0, 35)
-        Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        Btn.Text = Text
-        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Btn.Font = Enum.Font.Gotham
-        Btn.TextSize = 14
+    local Tabs = {}
+    local FirstTab = true
+
+    function Tabs:CreateTab(Name)
+        local Page = Instance.new("ScrollingFrame")
+        Page.Name = Name .. "Page"
+        Page.Parent = PageContainer
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.BackgroundTransparency = 1
+        Page.Visible = false
+        Page.ScrollBarThickness = 2
+
+        local PageLayout = Instance.new("UIListLayout")
+        PageLayout.Parent = Page
+        PageLayout.Padding = UDim.new(0, 5)
+
+        local TabBtn = Instance.new("TextButton")
+        TabBtn.Parent = TabContainer
+        TabBtn.Size = UDim2.new(1, 0, 0, 30)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        TabBtn.Text = Name
+        TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TabBtn.Font = Enum.Font.Gotham
+        TabBtn.TextSize = 12
         
         local BtnCorner = Instance.new("UICorner")
-        BtnCorner.Parent = Btn
+        BtnCorner.Parent = TabBtn
 
-        Btn.MouseButton1Click:Connect(function()
-            Callback()
+        -- ระบบสลับหน้า Tab
+        TabBtn.MouseButton1Click:Connect(function()
+            for _, v in pairs(PageContainer:GetChildren()) do
+                if v:IsA("ScrollingFrame") then v.Visible = false end
+            end
+            for _, v in pairs(TabContainer:GetChildren()) do
+                if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(200, 200, 200) end
+            end
+            Page.Visible = true
+            TabBtn.TextColor3 = Color3.fromRGB(255, 105, 180)
         end)
-    end
 
-    return Elements
+        if FirstTab then
+            Page.Visible = true
+            TabBtn.TextColor3 = Color3.fromRGB(255, 105, 180)
+            FirstTab = false
+        end
+
+        -- ฟังก์ชันเพิ่มปุ่มในหน้า Tab
+        local Elements = {}
+        function Elements:CreateButton(Text, Callback)
+            local Btn = Instance.new("TextButton")
+            Btn.Parent = Page
+            Btn.Size = UDim2.new(1, -5, 0, 35)
+            Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            Btn.Text = Text
+            Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Btn.Font = Enum.Font.Gotham
+            Btn.TextSize = 13
+            Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+            Btn.MouseButton1Click:Connect(Callback)
+        end
+        return Elements
+    end
+    return Tabs
 end
 
 return Library
