@@ -1,22 +1,22 @@
--- [[ Swift Hub UI Library V9 (Table Support) | Created by Pai for Zemon ]] --
+-- [[ Swift Hub UI Library V10 (Layout Fix) | Created by Pai for Zemon ]] --
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- รวมมิตร ID ไอคอน Lucide ของแท้ (ใช้งานได้จริง)
+-- ชุดไอคอน Lucide (SVG Style) ที่คัดมาแล้วว่าสวยและเส้นคมชัด
 local Lucide = {
-    ["sword"] = "rbxassetid://10723306472", -- ดาบ
-    ["settings"] = "rbxassetid://10734950309", -- ฟันเฟือง
-    ["user"] = "rbxassetid://10747383474", -- คน
-    ["home"] = "rbxassetid://10734882772", -- บ้าน
-    ["list"] = "rbxassetid://10734903332", -- รายการ
-    ["zap"] = "rbxassetid://10709848574", -- สายฟ้า
-    ["shield"] = "rbxassetid://10734963524", -- โล่
-    ["skull"] = "rbxassetid://10734966607", -- หัวกะโหลก
-    -- ไอคอนควบคุม UI
+    ["sword"] = "rbxassetid://10723415903",   -- ดาบ (แก้ไขใหม่)
+    ["home"] = "rbxassetid://10723354521",    -- บ้าน
+    ["settings"] = "rbxassetid://10734950309", -- ฟันเฟือง (อันที่ซีม่อนบอกว่าสวย)
+    ["user"] = "rbxassetid://10747383474",    -- คน
+    ["list"] = "rbxassetid://10734903332",    -- รายการ
+    ["zap"] = "rbxassetid://10709848574",     -- สายฟ้า
+    ["shield"] = "rbxassetid://10734963524",  -- โล่
+    
+    -- ไอคอนควบคุม UI มุมขวาบน
     ["equal-not"] = "rbxassetid://10734906040", -- พับจอ
-    ["expand"] = "rbxassetid://10747373176", -- ขยาย
-    ["octagon-x"] = "rbxassetid://10747383344" -- ปิด
+    ["expand"] = "rbxassetid://10747373176",    -- ขยาย
+    ["octagon-x"] = "rbxassetid://10747383344"  -- ปิด
 }
 
 function Library:CreateWindow(Settings)
@@ -30,7 +30,8 @@ function Library:CreateWindow(Settings)
     FloatBtn.Size = UDim2.new(0, 45, 0, 45)
     FloatBtn.Position = UDim2.new(0, 20, 0.5, -22)
     FloatBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    FloatBtn.Text = "S"; FloatBtn.TextColor3 = Color3.new(1,1,1)
+    FloatBtn.Text = "S"
+    FloatBtn.TextColor3 = Color3.new(1,1,1)
     FloatBtn.Font = Enum.Font.GothamBold; FloatBtn.TextSize = 18
     Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
     Instance.new("UIStroke", FloatBtn).Color = Color3.new(1,1,1)
@@ -64,7 +65,7 @@ function Library:CreateWindow(Settings)
     local function AddTopBtn(iconKey, cb)
         local b = Instance.new("ImageButton", Controls)
         b.Size = UDim2.new(0, 18, 0, 18); b.BackgroundTransparency = 1
-        b.Image = Lucide[iconKey] or "" -- ดึงรูปจากตัวแปร Lucide โดยตรง
+        b.Image = Lucide[iconKey] or ""
         b.ImageColor3 = Color3.new(1,1,1)
         b.MouseButton1Click:Connect(cb)
     end
@@ -83,62 +84,62 @@ function Library:CreateWindow(Settings)
 
     local Tabs = {}
     
-    -- [[ แก้ไขฟังก์ชัน CreateTab ให้รองรับ Table ]] --
+    -- [[ แก้ไขระบบ Tab ใหม่ : แยก Layout ไอคอนกับชื่อ ]] --
     function Tabs:CreateTab(TabSettings)
-        -- เช็คว่าส่งมาเป็น Table หรือไม่ ถ้าใช่ให้ดึงค่า Name กับ Icon
-        local Name, IconKey
-        if type(TabSettings) == "table" then
-            Name = TabSettings.Name
-            IconKey = TabSettings.Icon
-        else
-            Name = TabSettings -- รองรับแบบเก่า (ใส่แค่ชื่อ)
-        end
+        local Name = (type(TabSettings) == "table" and TabSettings.Name) or TabSettings
+        local IconKey = (type(TabSettings) == "table" and TabSettings.Icon) or nil
 
         local Page = Instance.new("ScrollingFrame", PageHolder)
         Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 0
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 10)
 
+        -- ตัวปุ่มหลัก (พื้นหลัง)
         local TBtn = Instance.new("TextButton", SideBar)
-        TBtn.Size = UDim2.new(1, -10, 0, 38); TBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-        -- เว้นวรรคข้างหน้าเยอะๆ เพื่อหลบไอคอน
-        TBtn.Text = "       " .. Name; TBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
-        TBtn.Font = Enum.Font.Gotham; TBtn.TextSize = 13; TBtn.TextXAlignment = Enum.TextXAlignment.Left
+        TBtn.Size = UDim2.new(1, -10, 0, 38)
+        TBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+        TBtn.Text = "" -- ปิดข้อความของปุ่มทิ้งไปเลย ป้องกันการทับ
+        TBtn.AutoButtonColor = false
         Instance.new("UICorner", TBtn)
 
-        -- สร้างรูปไอคอน (ถ้ามีการใส่ Icon มา)
-        if IconKey and Lucide[IconKey] then
-            local IconImg = Instance.new("ImageLabel", TBtn)
-            IconImg.Size = UDim2.new(0, 18, 0, 18)
-            IconImg.Position = UDim2.new(0, 10, 0.5, -9) -- จัดกึ่งกลางแนวตั้ง
-            IconImg.BackgroundTransparency = 1
-            IconImg.Image = Lucide[IconKey]
-            IconImg.ImageColor3 = Color3.fromRGB(160, 160, 160)
-        end
+        -- 1. สร้างไอคอน (ซ้ายสุด)
+        local IconImg = Instance.new("ImageLabel", TBtn)
+        IconImg.Size = UDim2.new(0, 20, 0, 20)
+        IconImg.Position = UDim2.new(0, 10, 0.5, -10) -- จัดกึ่งกลางแนวตั้ง
+        IconImg.BackgroundTransparency = 1
+        IconImg.Image = Lucide[IconKey] or "" -- ถ้าไม่มีไอคอนก็ปล่อยว่าง
+        IconImg.ImageColor3 = Color3.fromRGB(160, 160, 160)
+
+        -- 2. สร้างข้อความ (ถัดจากไอคอน)
+        local TitleLbl = Instance.new("TextLabel", TBtn)
+        TitleLbl.Size = UDim2.new(1, -40, 1, 0) -- พื้นที่ข้อความ (หักลบพื้นที่ไอคอน)
+        TitleLbl.Position = UDim2.new(0, 40, 0, 0) -- ขยับไปเริ่มหลังไอคอน (ระยะห่าง 40 pixel)
+        TitleLbl.BackgroundTransparency = 1
+        TitleLbl.Text = Name
+        TitleLbl.TextColor3 = Color3.fromRGB(160, 160, 160)
+        TitleLbl.Font = Enum.Font.Gotham
+        TitleLbl.TextSize = 13
+        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left -- ชิดซ้ายสวยๆ
 
         TBtn.MouseButton1Click:Connect(function()
             for _, v in pairs(PageHolder:GetChildren()) do v.Visible = false end
             for _, v in pairs(SideBar:GetChildren()) do 
                 if v:IsA("TextButton") then 
-                    v.TextColor3 = Color3.fromRGB(160, 160, 160)
-                    -- เปลี่ยนสีไอคอนกลับเป็นสีเทา
-                    if v:FindFirstChildOfClass("ImageLabel") then
-                        v:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.fromRGB(160, 160, 160)
-                    end
+                    -- Reset สีปุ่มอื่น
+                    if v:FindFirstChild("TextLabel") then v.TextLabel.TextColor3 = Color3.fromRGB(160, 160, 160) end
+                    if v:FindFirstChild("ImageLabel") then v.ImageLabel.ImageColor3 = Color3.fromRGB(160, 160, 160) end
                 end 
             end
-            Page.Visible = true; TBtn.TextColor3 = Color3.new(1,1,1)
-            -- เปลี่ยนสีไอคอนเป็นสีขาวตอนกดเลือก
-            if TBtn:FindFirstChildOfClass("ImageLabel") then
-                TBtn:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.new(1,1,1)
-            end
+            Page.Visible = true
+            -- Highlight สีปุ่มที่เลือก
+            TitleLbl.TextColor3 = Color3.new(1,1,1)
+            IconImg.ImageColor3 = Color3.new(1,1,1)
         end)
         
         -- เลือกหน้าแรกอัตโนมัติ
         if #SideBar:GetChildren() == 2 then 
-            Page.Visible = true; TBtn.TextColor3 = Color3.new(1,1,1)
-            if TBtn:FindFirstChildOfClass("ImageLabel") then
-                TBtn:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.new(1,1,1)
-            end
+            Page.Visible = true
+            TitleLbl.TextColor3 = Color3.new(1,1,1)
+            IconImg.ImageColor3 = Color3.new(1,1,1)
         end
 
         local Elements = {}
