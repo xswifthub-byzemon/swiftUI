@@ -1,4 +1,4 @@
--- [[ Swift Hub UI Library (V3: Pro Edition) | Created by Pai for Zemon ]] --
+-- [[ Swift Hub UI Library V3 (Fixed) | Created by Pai for Zemon ]] --
 local Library = {}
 local TweenService = game:GetService("TweenService")
 
@@ -6,6 +6,7 @@ function Library:CreateWindow(Settings)
     local WindowName = Settings.Name or "Swift Hub"
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
     ScreenGui.Name = "SwiftHubUI"
+    ScreenGui.ResetOnSpawn = false
 
     -- Main Frame
     local MainFrame = Instance.new("Frame", ScreenGui)
@@ -19,7 +20,7 @@ function Library:CreateWindow(Settings)
     -- Sidebar
     local SideBar = Instance.new("Frame", MainFrame)
     SideBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    SideBar.Size = UDim2.new(0, 120, 1, 0)
+    SideBar.Size = UDim2.new(0, 130, 1, 0)
     Instance.new("UICorner", SideBar).CornerRadius = UDim.new(0, 12)
 
     local Title = Instance.new("TextLabel", SideBar)
@@ -40,8 +41,8 @@ function Library:CreateWindow(Settings)
 
     -- Page Container
     local PageContainer = Instance.new("Frame", MainFrame)
-    PageContainer.Position = UDim2.new(0, 125, 0, 10)
-    PageContainer.Size = UDim2.new(1, -135, 1, -20)
+    PageContainer.Position = UDim2.new(0, 135, 0, 10)
+    PageContainer.Size = UDim2.new(1, -145, 1, -20)
     PageContainer.BackgroundTransparency = 1
 
     local Tabs = {}
@@ -53,7 +54,8 @@ function Library:CreateWindow(Settings)
         Page.BackgroundTransparency = 1
         Page.Visible = false
         Page.ScrollBarThickness = 2
-        Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
+        local PageLayout = Instance.new("UIListLayout", Page)
+        PageLayout.Padding = UDim.new(0, 8)
 
         local TabBtn = Instance.new("TextButton", TabContainer)
         TabBtn.Size = UDim2.new(1, 0, 0, 35)
@@ -65,26 +67,36 @@ function Library:CreateWindow(Settings)
         Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
         TabBtn.MouseButton1Click:Connect(function()
-            for _, v in pairs(PageContainer:GetChildren()) do v.Visible = false end
-            for _, v in pairs(TabContainer:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(200, 200, 200) end end
+            for _, v in pairs(PageContainer:GetChildren()) do
+                if v:IsA("ScrollingFrame") then v.Visible = false end
+            end
+            for _, v in pairs(TabContainer:GetChildren()) do
+                if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(200, 200, 200) end
+            end
             Page.Visible = true
             TabBtn.TextColor3 = Color3.fromRGB(255, 105, 180)
         end)
 
-        if FirstTab then Page.Visible = true; TabBtn.TextColor3 = Color3.fromRGB(255, 105, 180); FirstTab = false end
+        if FirstTab then
+            Page.Visible = true
+            TabBtn.TextColor3 = Color3.fromRGB(255, 105, 180)
+            FirstTab = false
+        end
 
         local Elements = {}
 
-        -- Section (กรอบพื้นหลังเล็กๆ)
+        -- Section
         function Elements:CreateSection(Text)
             local SectionLabel = Instance.new("TextLabel", Page)
-            SectionLabel.Size = UDim2.new(1, 0, 0, 20)
+            SectionLabel.Size = UDim2.new(1, -5, 0, 25)
+            SectionLabel.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
+            SectionLabel.BackgroundTransparency = 0.8
             SectionLabel.Text = "  " .. Text
-            SectionLabel.TextColor3 = Color3.fromRGB(255, 105, 180)
+            SectionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
             SectionLabel.Font = Enum.Font.GothamBold
-            SectionLabel.TextSize = 14
-            SectionLabel.BackgroundTransparency = 1
+            SectionLabel.TextSize = 13
+            Instance.new("UICorner", SectionLabel).CornerRadius = UDim.new(0, 4)
         end
 
         -- Button
@@ -113,17 +125,18 @@ function Library:CreateWindow(Settings)
             TglFrame.TextXAlignment = Enum.TextXAlignment.Left
             Instance.new("UICorner", TglFrame).CornerRadius = UDim.new(0, 6)
 
-            local Status = Default
             local Indicator = Instance.new("Frame", TglFrame)
             Indicator.Position = UDim2.new(1, -30, 0.5, -8)
             Indicator.Size = UDim2.new(0, 16, 0, 16)
-            Indicator.BackgroundColor3 = Status and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(50, 50, 50)
             Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+            
+            local Toggled = Default
+            Indicator.BackgroundColor3 = Toggled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(50, 50, 50)
 
             TglFrame.MouseButton1Click:Connect(function()
-                Status = not Status
-                TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = Status and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(50, 50, 50)}):Play()
-                Callback(Status)
+                Toggled = not Toggled
+                TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = Toggled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(50, 50, 50)}):Play()
+                Callback(Toggled)
             end)
         end
 
@@ -141,9 +154,10 @@ function Library:CreateWindow(Settings)
             SldLabel.BackgroundTransparency = 1
             SldLabel.TextXAlignment = Enum.TextXAlignment.Left
             SldLabel.Font = Enum.Font.Gotham
+            SldLabel.TextSize = 12
 
             local Bar = Instance.new("Frame", SldFrame)
-            Bar.Position = UDim2.new(0, 10, 0, 30)
+            Bar.Position = UDim2.new(0, 10, 0, 32)
             Bar.Size = UDim2.new(1, -50, 0, 4)
             Bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
@@ -154,23 +168,37 @@ function Library:CreateWindow(Settings)
             local ValLabel = Instance.new("TextLabel", SldFrame)
             ValLabel.Text = tostring(Default)
             ValLabel.Position = UDim2.new(1, -35, 0, 25)
-            ValLabel.Size = UDim2.new(0, 30, 0, 15)
+            ValLabel.Size = UDim2.new(0, 30, 0, 20)
             ValLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             ValLabel.BackgroundTransparency = 1
 
-            -- (Simplified Drag Logic for Mobile)
+            local UserInputService = game:GetService("UserInputService")
+            local dragging = false
+
+            local function update(input)
+                local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                Fill.Size = UDim2.new(pos, 0, 1, 0)
+                local val = math.floor(Min + (Max - Min) * pos)
+                ValLabel.Text = tostring(val)
+                Callback(val)
+            end
+
             Bar.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    local move = game:GetService("UserInputService").InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                            local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-                            Fill.Size = UDim2.new(pos, 0, 1, 0)
-                            local val = math.floor(Min + (Max - Min) * pos)
-                            ValLabel.Text = tostring(val)
-                            Callback(val)
-                        end
-                    end)
-                    input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then move:Disconnect() end end)
+                    dragging = true
+                    update(input)
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    update(input)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
                 end
             end)
         end
